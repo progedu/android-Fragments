@@ -3,6 +3,7 @@ package com.example.android.fragments;
 import android.app.Activity;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.ListFragment;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,6 +13,9 @@ import android.widget.ListView;
 
 public class HeadlinesFragment extends ListFragment {
     OnHeadlineSelectedListener mCallback;
+    private static final String UPDATED_POSITION = "updatedPosition";
+    private int selectedPosition = 0;
+
 
     // The container Activity must implement this interface so the frag can deliver messages
     public interface OnHeadlineSelectedListener {
@@ -20,7 +24,7 @@ public class HeadlinesFragment extends ListFragment {
     }
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    public void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         // We need to use a different list item layout for devices older than Honeycomb
@@ -37,6 +41,17 @@ public class HeadlinesFragment extends ListFragment {
         } catch (ClassCastException e) {
             throw new ClassCastException(getActivity().toString()
                     + " must implement OnHeadlineSelectedListener");
+        }
+
+        if(savedInstanceState != null) {
+            Handler handler = new Handler();
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    HeadlinesFragment.this.selectedPosition = savedInstanceState.getInt(UPDATED_POSITION, 0);
+                    mCallback.onArticleSelected(HeadlinesFragment.this.selectedPosition);
+                }
+            }, 1000);
         }
     }
 
@@ -58,6 +73,13 @@ public class HeadlinesFragment extends ListFragment {
 
         // Set the item as checked to be highlighted when in two-pane layout
         getListView().setItemChecked(position, true);
+
+        this.selectedPosition = position;
     }
 
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        outState.putInt(UPDATED_POSITION, this.selectedPosition);
+        super.onSaveInstanceState(outState);
+    }
 }
